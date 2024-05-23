@@ -41,19 +41,24 @@ def logout():
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    email = request.json.get("email")
-    password = request.json.get("password")
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
     
+    if not email or not password:
+        return jsonify({"msg": "Email and password are required", "status": 400}), 400
+
     if not Users.checkCredentials(email=email, password=password):
-        return jsonify({"msg": "Invalid credentials", "status": 404} ), 404
+        return jsonify({"msg": "Invalid credentials", "status": 401}), 401
     
     user = Users.getUser(email=email)
-    is_admin = int(user.role) == 1
+    is_admin = int(user.role) == 1 
     
     access_token = create_access_token(identity=user.uid, additional_claims={"is_admin": is_admin})
-    return jsonify({"msg": "sucessful login",
+    
+    return jsonify({"msg": "Successful login",
                     "access_token": access_token,
-                    "status": 200} ), 200
+                    "status": 200}), 200
     
 @auth_bp.route('/whoami', methods=['GET'])
 @jwt_required()

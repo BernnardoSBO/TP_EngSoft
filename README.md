@@ -5,7 +5,7 @@
 ### Members
 -
 - Luiza Viana Afonso
--
+- Samuel Lipovetky
 -
 -
 
