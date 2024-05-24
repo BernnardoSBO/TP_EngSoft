@@ -2,7 +2,6 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from models.UserModel import Users, UserSchema
 
-
 users_bp = Blueprint('users', __name__, url_prefix='/users')
 
 @users_bp.route('/', methods=['GET'])
@@ -27,25 +26,33 @@ def get_user(uid):
     
     return jsonify({"users": result}), 200
 
+
+def get_pagination_params(data):
+    DEFAULT_PAGE = 1
+    DEFAULT_PER_PAGE = 3
+    
+    if data is None:
+        return DEFAULT_PAGE, DEFAULT_PER_PAGE
+    
+    page = data.get("page", DEFAULT_PAGE)
+    per_page = data.get("per_page", DEFAULT_PER_PAGE)
+    
+    return page, per_page
+
+
 @users_bp.route('/page', methods=['GET'])
 @jwt_required()
 def get_users_page():
     data = request.get_json(silent=True)
     
-    if data is None:
-        page = 1
-        per_page = 3
-    else:
-        page = data.get("page", 1)
-        per_page = data.get("per_page", 3)
-        
+    page, per_page = get_pagination_params(data)
     
     users = Users.query.paginate(page=page, per_page=per_page)
-
-    result = UserSchema().dump(users, many=True)
+    
+    result = UserSchema().dump(users.items, many=True)
     
     return jsonify({"users": result}), 200
-    
+
 
 @users_bp.route('/', methods=['POST'])
 def create_user():
@@ -58,7 +65,6 @@ def create_user():
 # @users_bp.route('/<int:uid>', methods=['DELETE'])
 # def delete_user(uid):
 #     pass
-
 
 # @users_bp.route('/token', methods=['POST'])
 # def create_token():
