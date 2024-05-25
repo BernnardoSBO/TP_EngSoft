@@ -7,7 +7,7 @@
 - Luiza Viana Afonso
 - Samuel Lipovetky
 - Bernnardo Seraphim
-- Emyle
+- Emyle Santos Lima
 
 ### System
 
