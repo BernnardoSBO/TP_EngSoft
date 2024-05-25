@@ -45,7 +45,19 @@ class Users(db.Model):
     @classmethod
     def getUser(cls, email):
         return cls.query.filter_by(email=email).first()
-    
+
+    def registerUser(self, email, password, name, surname, cpf, role):
+        user = self.getUser(email=email)
+
+        if user is not None:
+            return None
+            
+        user = Users(email=email, name=name, surname=surname, cpf=cpf, role=role)
+        user.setPassword(password)
+        user.save()
+
+        return user
+
 class UserSchema(Schema):
     uid = fields.Integer()
     email = fields.String()

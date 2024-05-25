@@ -19,15 +19,11 @@ def register_user():
     cpf = request.json.get("cpf")
     role = 0
     
-    user = Users.query.filter_by(email=email).first()
+    response = Users.registerUser(email=email, password=password, name=name, 
+                                    surname=surname, cpf=cpf, role=role)
     
-    if user is not None:
+    if response is None:
         return jsonify({"msg": "user already exists", "status": 409} ), 409
-    
-    user = Users(email=email, name=name, surname=surname, cpf=cpf, role=role)
-    user.setPassword(password)
-    
-    user.save()
     
     return jsonify({ "msg": "Added User" , "status":200})
 
