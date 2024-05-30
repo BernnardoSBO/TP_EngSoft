@@ -25,31 +25,29 @@ def error_handler(jwt):
     def missing_token_callback(error):
         return jsonify({"message:":"Request doesn't contain an access token", "error":"authorization_required"}), 401
     
-    
-def access_handler(jwt):
-    @jwt.additional_claims_loader
-    def add_claims_to_jwt(identity):
-        user = Users.query.filter_by(uid=identity).first()
-        
-        if user.role == 1:
-            return {"is_admin": True}
-        else:
-            return {"is_admin": False}
+
+           
+def role_handler(jwt):
+    @jwt.user_lookup_loader
+    def user_lookup_callback(jwt_header, jwt_callback):
+        identity = jwt_callback['sub']
+        return Users.query.filter_by(uid=identity).one()
+           
             
-def check_access():
+def check_access(roles):
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
             # jwt_required()
             verify_jwt_in_request()
 
-            # check if current_user is admin with it's jwt
-            is_admin = get_jwt().get('is_admin')
-            
-            if is_admin:
+            user_roles = current_user.getRoles()
+
+            # check if current_user has the necessary role to access the route
+            if any(role in user_roles for role in roles):
                 return fn(*args, **kwargs)
             else:
-                return jsonify({"message": "Admin token required"}), 401
+                return jsonify({"message": "Role not authorized"}), 401
         return decorator
     return wrapper
 

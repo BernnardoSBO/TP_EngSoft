@@ -1,11 +1,12 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, current_user
 from models.UserModel import Users, UserSchema
+from token_handler import check_access
 
 users_bp = Blueprint('users', __name__, url_prefix='/users')
 
 @users_bp.route('/', methods=['GET'])
-@jwt_required()
+@check_access(["admin"])
 def get_users():
     users = Users.query.all()
     
@@ -13,9 +14,8 @@ def get_users():
     
     return jsonify({"users": result}), 200
 
-
 @users_bp.route('/<int:uid>', methods=['GET'])
-@jwt_required()
+@check_access(["admin", "vendor", "client"])
 def get_user(uid):
     user = Users.query.filter_by(uid=uid).first()
     
@@ -41,7 +41,7 @@ def get_pagination_params(data):
 
 
 @users_bp.route('/page', methods=['GET'])
-@jwt_required()
+@check_access(["admin", "vendor", "client"])
 def get_users_page():
     data = request.get_json(silent=True)
     
@@ -53,19 +53,69 @@ def get_users_page():
     
     return jsonify({"users": result}), 200
 
+    
+@users_bp.route('/add_role/<int:uid>', methods=['PUT'])
+@check_access(["admin"])
+def add_role(uid):
+    user = Users.query.filter_by(uid=uid).first()
+    
+    if (user == None):
+        return jsonify({"msg": "user not found", "status": 404}), 404
+    
+    user_roles = set(user.getRoles())
+    print(user_roles)
+    user_roles.add(request.json.get("role", None))
+    
+    user.setRoles(list(user_roles))
+    
+    user.update()
+     
+    return jsonify({"msg": "Updated user", "status": 200})
 
-@users_bp.route('/', methods=['POST'])
-def create_user():
-    pass
+@users_bp.route('/remove_role/<int:uid>', methods=['PUT'])
+@check_access(["admin"])
+def remove_role(uid):
+    user = Users.query.filter_by(uid=uid).first()
+    
+    if (user == None):
+        return jsonify({"msg": "user not found", "status": 404}), 404
+    
+    remove_role = request.json.get("role")
 
-# @users_bp.route('/<int:uid>', methods=['PUT'])
-# def update_user(uid):
-#     pass
+    user_roles = set(user.getRoles())
+    
+    if remove_role not in user_roles:
+        return jsonify({"msg": f"User doesn't have role {remove_role}", "status": 404}), 404
+    
+    user_roles.remove(request.json.get("role", None))
+    
+    user.setRoles(list(user_roles))
+    
+    user.update()
+     
+    return jsonify({"msg": "Updated user", "status": 200})
 
-# @users_bp.route('/<int:uid>', methods=['DELETE'])
-# def delete_user(uid):
-#     pass
 
-# @users_bp.route('/token', methods=['POST'])
-# def create_token():
-#     pass
+@users_bp.route('/delete_account', methods=['DELETE'])
+@check_access(["admin", "client", "vendor"])
+def delete_self():
+    user = Users.query.filter_by(uid=current_user.uid).first()
+    
+    if (user == None):
+        return jsonify({"msg": "user not found", "status": 404}), 404
+    
+    user.delete()
+    
+    return jsonify({"msg": "Deleted user", "status": 200})
+
+@users_bp.route('/delete_account/<int:uid>', methods=['DELETE'])
+@check_access(["admin"])
+def delete_account(uid):
+    user = Users.query.filter_by(uid=uid).first()
+    
+    if (user == None):
+        return jsonify({"msg": "user not found", "status": 404}), 404
+    
+    user.delete()
+    
+    return jsonify({"msg": "Deleted user", "status": 200})

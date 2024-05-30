@@ -48,36 +48,19 @@ def login():
         return jsonify({"msg": "Invalid credentials", "status": 401}), 401
     
     user = Users.getUser(email=email)
-    is_admin = int(user.role) == 1 
     
-    access_token = create_access_token(identity=user.uid, additional_claims={"is_admin": is_admin})
-    
-    return jsonify({"msg": "Successful login",
+    access_token = create_access_token(identity=user.uid)
+    return jsonify({"msg": "sucessful login",
                     "access_token": access_token,
-                    "status": 200}), 200
-    
+                    "status": 200} ), 200
+   
+ 
 @auth_bp.route('/whoami', methods=['GET'])
 @jwt_required()
-@check_access()
 def whoami():
     claims = get_jwt()
     
-    # return jsonify({"claims": claims})
-    if claims.get('is_admin'):
-        identity = get_jwt_identity()
-        return jsonify({ "identity": identity})
-    
-    return jsonify({"msg": "not admin"})
-    
-    # print(get_jwt())
-    # if claims.get('is_admin'):
-    #     identity = get_jwt_identity()
-        
-    # else:
-    #     return jsonify({"msg": "not admin"})
-    
-
-
+    return jsonify({"claims": claims})
     
 @auth_bp.after_request
 def refresh_expiring_jwts(response):
