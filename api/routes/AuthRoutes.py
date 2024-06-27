@@ -66,9 +66,7 @@ def whoami():
 def refresh_expiring_jwts(response):
     try:
         exp_timestamp = get_jwt()["exp"]
-        now = datetime.now(timezone.utc)
-        target_timestamp = datetime.timestamp(now + timedelta(minutes=30))
-        if target_timestamp > exp_timestamp:
+        if token_is_expired(exp_timestamp,delta=30,time=datetime.now(timezone.utc)):
             access_token = create_access_token(identity=get_jwt_identity())
             data = response.get_json()
             if type(data) is dict:
@@ -79,3 +77,13 @@ def refresh_expiring_jwts(response):
         return response
         
 
+def token_is_expired(exp_timestamp,delta,time=datetime.now(timezone.utc)):
+    #expiration timestamp = none
+    if exp_timestamp is None:
+        return True
+    
+    #time difference between "time" and "exp_timestap" arguments
+    #should be smaller than delta
+    target_timestamp = datetime.timestamp(time - timedelta(minutes=delta))
+    return target_timestamp > exp_timestamp
+    

@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_jwt_extended import verify_jwt_in_request, get_jwt, current_user
 from functools import wraps
 from enum import Enum
-from models.UserModel import Users
+# from models.UserModel import Users
 
 
 def error_handler(jwt):

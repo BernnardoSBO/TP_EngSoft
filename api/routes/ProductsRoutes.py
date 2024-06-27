@@ -44,24 +44,35 @@ def get_product(pid):
 @products_bp.route("/", methods=["POST"])
 @check_access(["vendor"])
 def create_product():
+   
+
+    product = create_product_from_request(request, vendor_id = current_user.uid)
+    
+    product.save()
+    
+    
+    return jsonify({"msg": "Added product", "status": 200})
+
+
+def create_product_from_request(request,vendor_id):
+    """
+    used to validate size of name, descriptions and 
+    possibly other attributes that could be added
+    """
     name = request.json.get("name")
     description = request.json.get("description")
     price = request.json.get("price")
     stock = request.json.get("stock")
-    vendor_id = current_user.uid
-
+  
     product = Products(
-        name=name,
-        description=description,
+        name=name[:50],
+        description=description[:100],
         price=price,
         stock=stock,
         vendor_id=vendor_id,
     )
+    return product
     
-    product.save()
-    
-    return jsonify({"msg": "Added product", "status": 200})
-
 @products_bp.route("/<int:pid>", methods=["PUT"])
 @check_access(["vendor"])
 def update_product(pid):
