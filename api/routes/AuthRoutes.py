@@ -77,13 +77,11 @@ def refresh_expiring_jwts(response):
         return response
         
 
-def token_is_expired(exp_timestamp,delta,time=datetime.now(timezone.utc)):
-    #expiration timestamp = none
+def token_is_expired(exp_timestamp, delta, time=datetime.now(timezone.utc)):
+  
     if exp_timestamp is None:
         return True
     
-    #time difference between "time" and "exp_timestap" arguments
-    #should be smaller than delta
-    target_timestamp = datetime.timestamp(time - timedelta(minutes=delta))
-    return target_timestamp > exp_timestamp
-    
+    #TODO: is this logic correct?
+    delta_timestamp = datetime.timestamp(time + timedelta(minutes=delta))
+    return exp_timestamp < delta_timestamp

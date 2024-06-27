@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import current_user
 from models.ProductModel import Products, ProductSchema
 from token_handler import check_access    
+from werkzeug.exceptions import BadRequest
 products_bp = Blueprint("products", __name__, url_prefix="/products")
 
 
@@ -44,35 +45,63 @@ def get_product(pid):
 @products_bp.route("/", methods=["POST"])
 @check_access(["vendor"])
 def create_product():
-   
+    try:
+        product = create_product_from_request(request, vendor_id=current_user.uid)
+        product.save()
+        return jsonify({"msg": "Added product", "status": 200}), 200
+    except ValueError as e:
+        return jsonify({"msg": str(e), "status": 400}), 400
+    except BadRequest as e:
+        return jsonify({"msg": "Invalid request data", "status": 400}), 400
 
-    product = create_product_from_request(request, vendor_id = current_user.uid)
-    
-    product.save()
-    
-    
-    return jsonify({"msg": "Added product", "status": 200})
-
-
-def create_product_from_request(request,vendor_id):
+def create_product_from_request(request, vendor_id):
     """
-    used to validate size of name, descriptions and 
-    possibly other attributes that could be added
+    Used to validate size of name, descriptions and 
+    possibly other attributes that could be added.
     """
-    name = request.json.get("name")
-    description = request.json.get("description")
+    #extracting fields from request
+    name = request.json.get("name", "").strip()
+    description = request.json.get("description", "").strip()
     price = request.json.get("price")
     stock = request.json.get("stock")
   
+    #validate required fields are present
+    if not name:
+        raise ValueError("Product name is required.")
+    if price is None:
+        raise ValueError("Product price is required.")
+    if stock is None:
+        raise ValueError("Product stock is required.")
+  
+    #truncate fields 
+    name = name[:50]
+    description = description[:100]
+
+    #validate price, stock types,etc
+    try:
+        price = float(price)
+        if price <= 0:
+            raise ValueError("Product price must be a positive number.")
+    except (ValueError, TypeError):
+        raise ValueError("Invalid price value.")
+    
+    try:
+        stock = int(stock)
+        if stock < 0:
+            raise ValueError("Product stock cannot be negative.")
+    except (ValueError, TypeError):
+        raise ValueError("Invalid stock value.")
+
     product = Products(
-        name=name[:50],
-        description=description[:100],
+        name=name,
+        description=description,
         price=price,
         stock=stock,
         vendor_id=vendor_id,
     )
-    return product
     
+    return product
+
 @products_bp.route("/<int:pid>", methods=["PUT"])
 @check_access(["vendor"])
 def update_product(pid):
