@@ -3,7 +3,7 @@ name: pytest
 on: [push, pull_request]
 
 jobs:
-  test:
+  test_and_build:
     runs-on: ubuntu-latest
     
     steps:
@@ -21,3 +21,6 @@ jobs:
     - name: Run tests
       run: |
         pytest api/tests
+      
+    - name: Build
+      run: flask ./api/run
