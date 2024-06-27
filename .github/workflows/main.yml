@@ -21,6 +21,3 @@ jobs:
     - name: Run tests
       run: |
         pytest api/tests
-      
-    - name: Build
-      run: flask ./api/run
