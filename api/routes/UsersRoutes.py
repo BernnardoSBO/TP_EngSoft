@@ -6,7 +6,7 @@ from token_handler import check_access
 users_bp = Blueprint('users', __name__, url_prefix='/users')
 
 @users_bp.route('/', methods=['GET'])
-@check_access(["admin"])
+@check_access([0])
 def get_users():
     users = Users.query.all()
     
@@ -15,7 +15,7 @@ def get_users():
     return jsonify({"users": result}), 200
 
 @users_bp.route('/<int:uid>', methods=['GET'])
-@check_access(["admin", "vendor", "client"])
+@check_access([0, "vendor", "client"])
 def get_user(uid):
     user = Users.query.filter_by(uid=uid).first()
     

@@ -19,7 +19,7 @@ def register_user():
     cpf = request.json.get("cpf")
     role = 0
     
-    response = Users.registerUser(email=email, password=password, name=name, 
+    response = Users().registerUser(email=email, password=password, name=name, 
                                     surname=surname, cpf=cpf, role=role)
     
     if response is None:

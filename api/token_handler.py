@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_jwt_extended import verify_jwt_in_request, get_jwt, current_user
 from functools import wraps
 from enum import Enum
-# from models.UserModel import Users
+from models.UserModel import Users
 
 
 def error_handler(jwt):
@@ -42,6 +42,9 @@ def check_access(roles):
             verify_jwt_in_request()
 
             user_roles = current_user.getRoles()
+            
+            if not isinstance(user_roles, (list, set)):
+                user_roles = [user_roles]
 
             # check if current_user has the necessary role to access the route
             if any(role in user_roles for role in roles):

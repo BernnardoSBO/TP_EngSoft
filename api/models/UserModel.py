@@ -65,7 +65,7 @@ class Users(db.Model):
         if user is not None:
             return None
             
-        user = Users(email=email, name=name, surname=surname, cpf=cpf, role=role)
+        user = Users(email=email, name=name, surname=surname, cpf=cpf, roles=role)
         user.setPassword(password)
         user.save()
 
